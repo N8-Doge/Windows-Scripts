@@ -1,3 +1,12 @@
+@echo off
+rem Run as admin
+net sessions
+if %errorlevel%==0 (
+echo Success!
+) else (
+echo No admin, please run with Administrative rights...
+pause
+exit
+)
 powershell set-executionpolicy remotesigned
-start powershell main.ps1 /w
-rem /w is wait for it to terminate, very particular about order because multiple shells gay
+start powershell .\main.ps1
