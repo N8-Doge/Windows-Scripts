@@ -1,9 +1,7 @@
 @echo off
 rem Run as admin
 net sessions
-if %errorlevel%==0 (
-echo Success!
-) else (
+if %errorlevel%==1 (
 echo No admin, please run with Administrative rights...
 pause
 exit

