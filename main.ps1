@@ -2,31 +2,49 @@
     @author    Nathan Chen
     @version   1-29-19
 
-    Currently dies i guess lol
+    Currently does users and firewall
     1-31 now using multiple files because cleaner and also execution policy
+    2-04 cleaning up stuff, this looks hideous
 #>
 
-# Alias Variables
-$cud = $env:Userprofile + '\Desktop'
+# Function for getting builtin accounts
+function get-account{
+    param($int)
+    $string = gwmi win32_useraccount -filter "LocalAccount='True'" | select Name,SID
+    $string -match '-'+$int | select -expand Name
+}
+
+# User desktop variable
+$cud = $Home + '\Desktop'
+
+# Initialize Logs
 md $cud\logs -force | out-null
 $log = $cud + '\logs\main.txt'
 $pwlog = $cud + '\logs\pwlog.txt'
 echo 'Current Passwords:' > $pwlog
-$readme = $cud + '\CyberPatriot README.url'
-$admin = (get-wmiobject -classname win32_useraccount -Filter "LocalAccount='True'" | select Name,SID) -match '-500' | select -Expand Name
-$guest = (get-wmiobject -classname win32_useraccount -Filter "LocalAccount='True'" | select Name,SID) -match '-501' | select -Expand Name
+
+# Set readme location
+$readme = $env:systemdrive+'\CyberPatriot\README.url'
+
+# Get Built-in account names
+$admin = get-account(500)
+$guest = get-account(501)
+
+# Set automatic variables
 $progressPreference = "silentlyContinue"
 $confirmPreference = "none"
 
 # Create Functions
 function write-hf{
     param($string)
-    $string = '['+(get-date).hour+'-'+(get-date).minute+'-'+(get-date).second+']'+$string
+    $d = get-date
+    $string = '['+$d.hour+'-'+$d.minute+'-'+$d.second+']'+$string
     write-output $string | tee -file $log -append
 }
 function write-wf{
     param($string)
-    $string = '['+(get-date).hour+'-'+(get-date).minute+']!'+$string
+    $d = get-date
+    $string = '['+$d.hour+'-'+$d.minute+']!'+$string
     write-warning $string | tee -file $log -append
 }
 function end{
