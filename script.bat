@@ -1,9 +1,8 @@
 @echo off
 rem Run as admin
-net sessions
-if %errorlevel%==1 (
-echo No admin, please run with Administrative rights...
-pause
+net sessions 2> nul
+if %errorlevel%==2 (
+powershell start .\script.bat -verb runas
 exit
 )
 powershell set-executionpolicy remotesigned -scope CurrentUser -force
