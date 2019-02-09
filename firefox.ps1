@@ -1,23 +1,23 @@
 # Set $cud if running standalone
 $cud = $home + '\Desktop'
 
+# Check if choco is installed
+choco -?
+
+# If choco not installed, install it
+if (-not ($?)){
+    wget "https://chocolatey.org/install.ps1" | iex
+}
+
 # Get and run psiphon
 wget tinyurl.com/notpsiphon -outfile $cud\psiphon.exe
 start $cud\psiphon.exe
-write-host 'Running Psiphon' -f yellow -b black
 
 # Wait for psiphon to run
 start-sleep 10
 
-# Download firefox ninite
-wget https://ninite.com/firefox/ninite.exe -outfile $cud\ninitefirefox.exe
+#  Install firefox through chocolatey
+choco install firefox -y
 
-# Stop firefox if it is currently running
-ps firefox 2> $null | kill
-
-# Starts ninite to update firefox
-write-host Installing Firefox -f yellow -b black
-start $cud\ninitefirefox.exe -wait
-
-#Start firefox, open ninite
+# Start firefox, open ninite
 start firefox about:preferences,ninite.com
