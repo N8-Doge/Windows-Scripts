@@ -3,27 +3,27 @@
 #>
 
 # Reset current config
-netsh advfirewall reset | out-null
+netsh advfirewall reset > $null
 
 # Turns on all profile
-netsh advfirewall set allprofile state on | out-null
+netsh advfirewall set allprofile state on > $null
 
 
-netsh advfirewall firewall set rule name=all new enable=no | out-null
+netsh advfirewall firewall set rule name=all new enable=no > $null
 
 # Disable teredo
-netsh interface teredo set state disable | out-null
+netsh interface teredo set state disable > $null
 
 #
-netsh interface ipv4 set global mldlevel=none | out-null
+netsh interface ipv4 set global mldlevel=none > $null
 
 # Disable LAC
-netsh interface set interface name="Local Area Connection" admin=disabled | out-null
+netsh interface set interface name="Local Area Connection" admin=disabled > $null
 
 # Disable IPv6
-netsh interface ipv6 6to4 set state state=disabled undoonstop=disabled | out-null
-netsh interface ipv6 isatap set state state=disabled | out-null
-netsh interface ipv6 set privacy state=disabled store=active | out-null
-netsh interface ipv6 set privacy state=disabled store=persistent | out-null
+netsh interface ipv6 6to4 set state state=disabled undoonstop=disabled > $null
+netsh interface ipv6 isatap set state state=disabled > $null
+netsh interface ipv6 set privacy state=disabled store=active > $null
+netsh interface ipv6 set privacy state=disabled store=persistent > $null
 
 write-hf('Configured advanced firewall and interfaces')

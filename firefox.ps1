@@ -2,22 +2,26 @@
 $cud = $home + '\Desktop'
 
 # Check if choco is installed
-choco -?
+gcm choco -ErrorAction SilentlyContinue | out-null
 
 # If choco not installed, install it
 if (-not ($?)){
-    wget "https://chocolatey.org/install.ps1" | iex
+    write-host "Installing Chocolatey" -f yellow -b black
+    function global:Write-Host() {} #suppress write-host
+    wget "https://chocolatey.org/install.ps1" | iex > $null
+    rm function:\write-host #restore write-host
+}
+else{
+    write-host "Choco is installed" -f green -b black
 }
 
-# Get and run psiphon
-wget tinyurl.com/notpsiphon -outfile $cud\psiphon.exe
-start $cud\psiphon.exe
+# Kill firefox if it exists
+ps firefox 2> $null | kill
 
-# Wait for psiphon to run
-start-sleep 10
+# Install firefox through chocolatey
+write-host "Reinstalling Firefox..." -f yellow -b black
+choco install firefox -y -force > $null
 
-#  Install firefox through chocolatey
-choco install firefox -y
-
-# Start firefox, open ninite
-start firefox about:preferences,ninite.com
+# Start firefox
+write-host "Firefox reinstalled" -f green -b black
+start firefox about:preferences
