@@ -1,56 +1,65 @@
 ﻿<#
-    Sets aliases and functions for the script
+.SYNOPSIS
+    Author: Nathan Chen
+    Version: 2-11-19
+    Initialize functions
+
+.DESCRIPTION
+    Sets up functions and variables for the master script
+    Also checks prerequisites for script to run
 #>
+[CmdletBinding()]
+param()
 
+#-----[Preference Variables]-----
+# Debug: Inquire, Continue, SilentlyContinue
+$Debug = "Continue"
+$ConfirmPreference = "None"
+$DebugPreference = $Debug
+$ErrorActionPreference = $Debug
+$ProgressPreference = $Debug
+$VerbosePreference = $Debug
+$WarningPreference = $Debug
 
-# Function for getting builtin accounts
+#-----[Functions]-----
 function get-account{
-    param($int)
-    $string = gwmi win32_useraccount -filter "LocalAccount='True'" | select Name,SID
-    $string -match '-'+$int | select -expand Name
+    param([int]$i)
+    $str = glu * | select Name,SID
+    $str -match '-'+$i | select -exp Name
 }
-
-# User desktop variable
-$cud = $Home + '\Desktop'
-
-# Initialize Logs
-md $cud\logs -force | out-null
-$log = $cud + '\logs\main.txt'
-$pwlog = $cud + '\logs\pwlog.txt'
-echo 'Current Passwords:' > $pwlog
-
-# Set readme location
-$readme = $env:systemdrive+'\CyberPatriot\README.url'
-
-# Get Built-in account names
-$admin = get-account(500)
-$guest = get-account(501)
-
-# Set automatic variables
-$progressPreference = "silentlyContinue"
-$confirmPreference = "none"
-
-# Create Functions
+function write-log{
+    param([string]$s)
+    $d = $(get-date)
+    '['+$d.hour+'-'+$d.minute+'-'+$d.second+']' + $s
+}
 function write-hf{
-    param($string)
-    $d = get-date
-    $string = '['+$d.hour+'-'+$d.minute+'-'+$d.second+']'+$string
-    write-output $string | tee -file $log -append
+    param([string]$s)
+    write-output $s | tee -file $log -append
 }
 function write-wf{
-    param($string)
-    $d = get-date
-    $string = '['+$d.hour+'-'+$d.minute+']!'+$string
-    write-warning $string | tee -file $log -append
+    param([string]$s)
+    write-warning $s | tee -file $log -append
 }
 function end{
-    echo "Press any key to exit"; 
-    cmd /c pause | out-null; 
+    echo "Press any key to exit"
+    cmd /c pause > $null
     exit
 }
 
+#-----[Declarations]-----
+$cud = $Home + '\Desktop'
+$log = $cud + '\logs\main.log'
+$pwlog = $cud + '\logs\pwlog.log'
+$readme = $env:systemdrive + '\CyberPatriot\Readme.url'
+$admin = $(get-account(500))
+$guest = $(get-account(501))
+
+#-----[Prereq Checks (in progress]-----
+net sessions 2>&1 > $null
+if (!$?) {write-wf 'Run in admin'; end}
+
 #Check admin
-net sessions 2>&1 $null
+net sessions 2>&1 > $null
 if (!$?) {write-wf 'Run in admin'; end}
 write-host Admin check passed -f Green
 
@@ -62,9 +71,9 @@ rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
 $admin = 'notAdmin'; $guest = 'notGuest'
 
 #Default account check?
-$defaultUser=(get-wmiobject -classname win32_useraccount -Filter "LocalAccount='True'" | select Name,SID) -match '-503' | select -Expand Name 2>&1 | out-null
+$defaultUser=(get-wmiobject -classname win32_useraccount -Filter "LocalAccount='True'" | select Name,SID) -match '-503' | select -Expand Name 2>&1 > $null
 
 #Boot up webclient for wget
-start-service webclient 2>&1 | out-null
+start-service webclient 2>&1 > $null
 if(!$?){write-wf('Webclient is disabled')}
 else{write-hf('Booted up webclient')}

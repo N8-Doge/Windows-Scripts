@@ -1,10 +1,11 @@
 <#
-    @author    Nathan Chen
-    @version   1-29-19
+.SYNOPSIS
+    Author: Nathan Chen
+    Version: 2-11-19
+    Run Script
 
-    Currently does users and firewall
-    1-31 now using multiple files because cleaner and also execution policy
-    2-04 cleaning up stuff, this looks hideous
+.DESCRIPTION
+    Please run using batch file
 #>
 
 #Run files
@@ -13,6 +14,3 @@
 .\firefox.ps1
 .\netsh.ps1
 .\other.ps1
-
-#Fin
-write-hf("Script finished")

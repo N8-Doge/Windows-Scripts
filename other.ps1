@@ -19,7 +19,7 @@ else{
 $shares = gwmi -class win32_share | select -expand Name
 Foreach($i in $shares){
     if(!$preserve.Contains($i)){
-        (gwmi -class win32_share -Filter "Name='$i'").delete() | out-null
+        (gwmi -class win32_share -Filter "Name='$i'").delete() > $null
         write-hf('Deleted share ' + $i)
     }
 }
@@ -34,11 +34,11 @@ attrib -r -s C:\WINDOWS\system32\drivers\etc\hosts
 echo ''> C:\Windows\System32\drivers\etc\hosts
 write-hf('Wrote over host file')
 if (!(test-path HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP))
-    {New-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 -PropertyType "DWord" | out-null}
+    {New-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 -PropertyType "DWord" > $null}
 else
-    {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 | out-null}
+    {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 > $null}
 write-hf('Disabled Universal Plug and Play')
-disable-psremoting -force | out-null
+disable-psremoting -force > $null
 write-hf('Disabled remote Powershell')
 
 
@@ -67,3 +67,6 @@ if ($confirmation -eq 'y') {
     cmd /c pause
     wget https://www.winprivacy.de/app/download/12302828636/W10Privacy.zip?t=1545069821 -outfile $cud\w10.exe
 }
+
+#Fin
+write-hf("Script finished")

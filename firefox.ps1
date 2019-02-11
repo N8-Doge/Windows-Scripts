@@ -2,7 +2,7 @@
 $cud = $home + '\Desktop'
 
 # Check if choco is installed
-gcm choco -ErrorAction SilentlyContinue | out-null
+gcm choco -ErrorAction SilentlyContinue > $null
 
 # If choco not installed, install it
 if (-not ($?)){
