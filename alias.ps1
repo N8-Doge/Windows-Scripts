@@ -11,7 +11,7 @@
 [CmdletBinding()]
 param()
 
-#-----[Preference Variables]-----
+#----------[ Preference Variables ]----------
 # Debug: Inquire, Continue, SilentlyContinue
 $Debug = "Continue"
 $ConfirmPreference = "None"
@@ -21,7 +21,7 @@ $ProgressPreference = $Debug
 $VerbosePreference = $Debug
 $WarningPreference = $Debug
 
-#-----[Functions]-----
+#----------[ Functions ]----------
 function get-account{
     param([int]$i)
     $str = glu * | select Name,SID
@@ -34,10 +34,12 @@ function write-log{
 }
 function write-hf{
     param([string]$s)
+    $s = write-log($s)
     write-output $s | tee -file $log -append
 }
 function write-wf{
     param([string]$s)
+    $s = write-log($s)
     write-warning $s | tee -file $log -append
 }
 function end{
@@ -46,34 +48,39 @@ function end{
     exit
 }
 
-#-----[Declarations]-----
+#----------[ Declarations ]----------
 $cud = $Home + '\Desktop'
 $log = $cud + '\logs\main.log'
 $pwlog = $cud + '\logs\pwlog.log'
 $readme = $env:systemdrive + '\CyberPatriot\Readme.url'
 $admin = $(get-account(500))
 $guest = $(get-account(501))
+$dUser = $(get-account(503))
 
-#-----[Prereq Checks (in progress]-----
-net sessions 2>&1 > $null
-if (!$?) {write-wf 'Run in admin'; end}
+#----------[ Prereq Checks ]----------
+# Arbitrary variables
+$UID = [Security.Principal.WindowsIdentity]::GetCurrent()
+$userObj = new-object Security.Principal.WindowsPrincipal($UID)
+$userSID = get-localuser $env:username | select -exp SID
+$adminSID = get-localuser $admin | select -exp SID
+$adminPos = [Security.Principal.WindowsBuiltinRole]::Administrator
 
-#Check admin
-net sessions 2>&1 > $null
-if (!$?) {write-wf 'Run in admin'; end}
-write-host Admin check passed -f Green
+# Script is running with admin
+if(-not $userObj.isInRole($adminPos)){
+    write-wf('Admin check failed')
+    end
+}
 
-#Check that user isn't logged into Administrator
-if(($env:username -eq  $admin)){write-wf('You are logged in as Administrator, please switch accounts'); end}
+# User isn't logged into default Admin
+if(($userSID -eq  $adminSID)){
+    write-wf('Unique admin check failed')
+    end
+}
 
-#Change default account names
-rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
-$admin = 'notAdmin'; $guest = 'notGuest'
+# Logs folder/files exist
+if(-not (test-path $cud\logs)){
+    mkdir $cud\logs
+}
 
-#Default account check?
-$defaultUser=(get-wmiobject -classname win32_useraccount -Filter "LocalAccount='True'" | select Name,SID) -match '-503' | select -Expand Name 2>&1 > $null
-
-#Boot up webclient for wget
-start-service webclient 2>&1 > $null
-if(!$?){write-wf('Webclient is disabled')}
-else{write-hf('Booted up webclient')}
+#----------[ alias.ps1 end ]-----------
+write-debug 'Reached end of alias'

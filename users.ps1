@@ -13,6 +13,12 @@
 <#
     Find allowed users and admins through Readme parsing or desktop files
 #>
+
+#find a better place to put this...
+start-service webclient 2>&1 > $null
+if(!$?){write-wf('Webclient is disabled')}
+else{write-hf('Booted up webclient')}
+
 $confirmation = Read-Host "Do you want to parse link? y/n"
 if ($confirmation -eq 'y') {
     if (-not(test-path $readme)){write-wf('Did not find Readme to parse'); cmd /c pause; exit}
@@ -62,7 +68,9 @@ else{
 }
 $allowedAdmins += $admin,$env:username
 $allowedUsers += $admin,$env:username,$guest
-if($defaultUser){$allowedUsers += $defaultUser}
+if($dUser){$allowedUsers += $dUser}
+rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
+$admin = 'notAdmin'; $guest = 'notGuest'
 
 <#
     Audit users and groups
@@ -136,7 +144,7 @@ Foreach ($i in $Users){
 }
 dlu $admin
 dlu $guest
-if ($defaultuser){dlu $defaultuser}
+if ($dUser){dlu $dUser}
 write-hf('Disabled built-in accounts, enabled others')
 #Reset password policy
 net accounts /minpwlen:8 > $null

