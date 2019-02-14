@@ -7,16 +7,65 @@
 .DESCRIPTION
     If you choose not to parse the readme file,
     make sure you have admins.txt and users.txt
-    on your desktop. Script also deletes shares
-    so preserve them with shares.txt
+    on your desktop.
 #>
 [CmdletBinding()]
 param()
+
+#----------[ Declarations ]----------
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$readme = $env:systemdrive + '\CyberPatriot\Readme.url'
 
 #----------[ Functions ]----------
+function parse-link{
+    param(
+        [parameter(mandatory=$true)]
+        [string]$file
+    )
+    $target = (New-Object -ComObject WScript.Shell)
+    $target = $target.createshortcut($readme).targetpath
+    if($target.indexof('//') -gt -1){
+        $target = $target.substring(2+$target.indexof('//'))
+    }
+    $target
+}
+function parse-readme{
+    param(
+        [parameter(mandatory=$true)]
+        [string]$url
+    )
+    $file = wget $url
+    $file = ($file | select -exp content).tostring()
+    $start = $file.IndexOf('<pre>')+5
+    $end = $file.IndexOf('</pre>') - $start
+    $file.substring($start, $end)
+}
+function get-readme{
+    [switch] $admins
+    [switch] $users
+    [string] $section
+    if (-not (($admins) -or ($users))){
+        return
+    }
+    $return = @()
+}
+
+#----------[ Main Execution ]----------
+$link = parse-link($readme)
+write-debug "Found README url at$link"
+$content = parse-readme($link)
+write-debug "Raw content for readme`n$content"
+$allowedAdmins = get-readme($content) -admins
+write-host "Admins $allowedAdmins"
+$allowedUsers = get-readme($content) -users
+write-host "Users $allowedUsers"
+
+
+<# old stuff
 function parse-readme{
     param([string]$readme)
+    [switch] $administrators
+    [switch] $users
     $target = (New-Object -ComObject WScript.Shell)
     $target = $target.CreateShortcut($readme).TargetPath
     if($target.indexOf('//') -gt -1){
@@ -64,8 +113,7 @@ function parse-readme{
             }
         }
     }
-    $allowed = $allowedUsers,$allowedAdmins
-    $allowed
+    return $allowedUsers,$allowedAdmins
 }
 
 #----------[ Main Execution ]-----------
