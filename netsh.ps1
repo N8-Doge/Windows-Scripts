@@ -27,3 +27,6 @@ netsh interface ipv6 set privacy state=disabled store=active > $null
 netsh interface ipv6 set privacy state=disabled store=persistent > $null
 
 write-hf('Configured advanced firewall and interfaces')
+
+#----------[ netsh.ps1 end ]------------
+write-debug 'Reached end of netsh'

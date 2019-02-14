@@ -71,3 +71,6 @@ if ($confirmation -eq 'y') {
 
 #Fin
 write-hf("Script finished")
+
+#----------[ other.ps1 end ]------------
+write-debug 'Reached end of other'

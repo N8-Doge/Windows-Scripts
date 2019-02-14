@@ -1,7 +1,7 @@
 ﻿<#
 .SYNOPSIS
     Author: Nathan Chen
-    Version: 2-11-19
+    Created: 2-11-19
     Initialize functions
 
 .DESCRIPTION

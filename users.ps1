@@ -1,61 +1,81 @@
 <#
-    @author    Nathan Chen
-    @version   1-29-19
+.SYNOPSIS
+    Author: Nathan Chen
+    Created: 2-14-19
+    Configures users accordingly
 
-    Currently does users
-    1-24 https is what has been breaking wget
-    1-25 implement because it is epic https://github.com/mortenya/Windows10-Cleanup/blob/master/Windows10-Initial-Hardening.ps1 haven't done yet
-    1-29 Optimized default account stuff
-    1-30 fixed wget for readme, use -usebasicparsing for text based wget's and remove https://
-    2-01 making the whole thing into different files, haven't tested yet so hope it works
+.DESCRIPTION
+    If you choose not to parse the readme file,
+    make sure you have admins.txt and users.txt
+    on your desktop. Script also deletes shares
+    so preserve them with shares.txt
 #>
+[CmdletBinding()]
+param()
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-<#
-    Find allowed users and admins through Readme parsing or desktop files
-#>
-
-#find a better place to put this...
-start-service webclient 2>&1 > $null
-if(!$?){write-wf('Webclient is disabled')}
-else{write-hf('Booted up webclient')}
-
-$confirmation = Read-Host "Do you want to parse link? y/n"
-if ($confirmation -eq 'y') {
-    if (-not(test-path $readme)){write-wf('Did not find Readme to parse'); cmd /c pause; exit}
-    write-host Found README at $readme -f Green
-    $target = (New-Object -ComObject WScript.Shell).CreateShortcut($readme).TargetPath
-    if($target.indexOf('//') -gt 0){$target = $target.substring(2+$target.indexOf('//'))}
-	write-host Found README url at $target -f Green
-    $file = (wget $target -Method Get -UseBasicParsing | select -expand Content).toString()
-    $section = ($file.substring($file.IndexOf('<pre>')+5, $file.IndexOf('</pre>') - $file.IndexOf('<pre>')-5)) -split "`r`n" -split "<br>" -split "<b>"
+#----------[ Functions ]----------
+function parse-readme{
+    param([string]$readme)
+    $target = (New-Object -ComObject WScript.Shell)
+    $target = $target.CreateShortcut($readme).TargetPath
+    if($target.indexOf('//') -gt -1){
+        $target = $target.substring(2+$target.indexOf('//'))
+    }
+    write-debug "Found README url at $target"
+    $file = wget $target -Method Get -UseBasicParsing 
+    $file = ($file | select -expand Content).toString()
+    $start = $file.IndexOf('<pre>')+5
+    $end = $file.IndexOf('</pre>') - $start
+    $section = $file.substring($start, $end)
+    $section = $section -split "`r`n" -split "<br>" -split "<b>"
     $allowedUsers = @()
-    foreach ($i in $section){
+    forEach($i in $section){
         if (($i -notmatch ";") -and ($i -notmatch "`r`n")){
             $index = $i
             if ($i -match "(you)"){$index = $i.substring(0,$i.IndexOf("(you)"))}
             else{$index = $i}
-            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){$index=$index.substring(0,$index.length-1)}
-            if($index -ne ""){$allowedUsers+=$index}
+            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){
+                $index=$index.substring(0,$index.length-1)
+            }
+            if($index -ne ""){
+                $allowedUsers+=$index
+            }
         }
     }
-    $section = ($file.substring($file.IndexOf('<pre>')+5, $file.IndexOf('Authorized Users') - $file.IndexOf('<pre>')-5)) -split "`r`n" -split "<br>" -split "<b>"
+    $end = $file.IndexOf('Authorized Users') - $start
+    $section = $file.substring($start, $end)
+    $section = $section -split "`r`n" -split "<br>" -split "<b>"
     $allowedAdmins = @()
-    foreach ($i in $section){
+    forEach ($i in $section){
         if (($i -notmatch ";") -and ($i -notmatch "`r`n")){
             $index = $i
-            if ($i -match "(you)"){$index = $i.substring(0,$i.IndexOf("(you)"))}
-            else{$index = $i}
-            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){$index=$index.substring(0,$index.length-1)}
-            if($index -ne ""){$allowedAdmins+=$index}
+            if ($i -match "(you)"){
+                $index = $i.substring(0,$i.IndexOf("(you)"))
+            }
+            else{
+                $index = $i
+            }
+            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){
+                $index=$index.substring(0,$index.length-1)
+            }
+            if($index -ne ""){
+                $allowedAdmins+=$index
+            }
         }
     }
-    echo "Users:"
-    $allowedUsers
-    echo "`nAdmins:"
-    $allowedAdmins
-    $confirmation = Read-Host "Are the admins and users correct? y/n"
-    if ($confirmation -eq 'n') {write-wf("Something went wrong with the parser, try again");end}
+    $allowed = $allowedUsers,$allowedAdmins
+    $allowed
 }
+
+#----------[ Main Execution ]-----------
+
+
+#----------[ users.ps1 end ]-----------
+write-debug 'Reached end of users'
+
+<# Old stuff
+
 else{
     #Check user/admin files
     if (-not(test-path $cud\Users.txt))
@@ -72,9 +92,6 @@ if($dUser){$allowedUsers += $dUser}
 rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
 $admin = 'notAdmin'; $guest = 'notGuest'
 
-<#
-    Audit users and groups
-#>
 #Update Group Policy to allow user and password adding
 if (test-path $env:windir\System32\GroupPolicyUsers) 
     {cmd /c rd /S /Q $env:windir\System32\GroupPolicyUsers}
@@ -153,3 +170,4 @@ secedit /export /cfg c:\secpol.cfg > $null
 secedit /configure /db c:\windows\security\local.sdb /cfg c:\secpol.cfg /areas SECURITYPOLICY > $null
 rm -force c:\secpol.cfg -confirm:$false > $null
 write-hf('Restored pw policy')
+#>
