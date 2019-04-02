@@ -13,13 +13,13 @@ param()
 
 #----------[ Preference Variables ]----------
 # Debug: Inquire, Continue, SilentlyContinue
-$Debug = "Continue"
+$Console = "Continue"
 $ConfirmPreference = "None"
-$DebugPreference = $Debug
-$ErrorActionPreference = $Debug
-$ProgressPreference = $Debug
-$VerbosePreference = $Debug
-$WarningPreference = $Debug
+$DebugPreference = $Console
+$ErrorActionPreference = $Console
+$ProgressPreference = $Console
+$VerbosePreference = $Console
+$WarningPreference = $Console
 
 #----------[ Functions ]----------
 function get-account{
@@ -45,7 +45,7 @@ function write-wf{
 function end{
     echo "Press any key to exit"
     cmd /c pause > $null
-    exit
+    throw "Early exit"
 }
 
 #----------[ Declarations ]----------
