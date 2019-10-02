@@ -1,30 +1,61 @@
 ﻿<#
 .SYNOPSIS
-    Author: Nathan Chen
-    Created: 2-11-19
-    Initialize functions
 
-.DESCRIPTION
-    Sets up functions and variables for the master script
-    Also checks prerequisites for script to run
+,DESCRIPTION
 #>
 [CmdletBinding()]
 param()
 
 #----------[ Preference Variables ]----------
-# Debug: Inquire, Continue, SilentlyContinue
-$Console = "Continue"
+$defaultConsole = "Continue"
 $ConfirmPreference = "None"
-$DebugPreference = $Console
-$ErrorActionPreference = $Console
-$ProgressPreference = $Console
-$VerbosePreference = $Console
-$WarningPreference = $Console
+$DebugPreference = $DefaultConsole
+$ErrorActionPreference = $DefaultConsole
+$ProgressPreference = $DefaultConsole
+$VerbosePreference = $DefaultConsole
+$WarningPreference = $DefaultConsole
+
+#----------[ Aliases ]----------
+$winVer = $(gwmi win32_operatingsystem)
+if($winVer.name.Contains("server")){
+    set-alias Add-GroupMember Add-ADGroupMember
+    set-alias Disable-User Disable-ADUser
+    set-alias Enable-User Enable-ADUser
+    set-alias Get-Group Get-ADGroup
+    set-alias Get-GroupMember Get-ADGroupMember
+    set-alias Get-User Get-ADUser
+    set-alias New-Group New-ADGroup
+    set-alias New-User New-ADUser
+    set-alias Remove-Group Remove-ADGroup
+    set-alias Remove-GroupMember Remove-ADGroupMember
+    set-alias Remove-User Remove-ADUser
+    set-alias Rename-Group Rename-ADGroup
+    set-alias Rename-User Rename-ADUser
+    set-alias Set-Group Set-ADGroup
+    set-alias Set-User Set-ADUser
+}
+else{
+    set-alias Add-GroupMember Add-LocalGroupMember
+    set-alias Disable-User Disable-LocalUser
+    set-alias Enable-User Enable-LocalUser
+    set-alias Get-Group Get-LocalGroup
+    set-alias Get-GroupMember Get-LocalGroupMember
+    set-alias Get-User Get-LocalUser
+    set-alias New-Group New-LocalGroup
+    set-alias New-User New-LocalUser
+    set-alias Remove-Group Remove-LocalGroup
+    set-alias Remove-GroupMember Remove-LocalGroupMember
+    set-alias Remove-User Remove-LocalUser
+    set-alias Rename-Group Rename-LocalGroup
+    set-alias Rename-User Rename-LocalUser
+    set-alias Set-Group Set-LocalGroup
+    set-alias Set-User Set-LocalUser
+}
 
 #----------[ Functions ]----------
 function get-account{
     param([int]$i)
-    $str = glu * | select Name,SID
+    $str = get-localuser * | select Name,SID
     $str -match '-'+$i | select -exp Name
 }
 function write-log{
@@ -42,6 +73,22 @@ function write-wf{
     $s = write-log($s)
     write-warning $s | tee -file $log -append
 }
+function get-randompw($len){
+    ForEach($i in 1..$len){
+        $s+=[char]((33..126) | get-random)
+    }
+    if($s -cmatch "[a-z]"){$i++}
+    if($s -cmatch "[A-Z]"){$i++}
+    if($s -cmatch "[0-9]"){$i++}
+    if($s -cmatch "[^a-zA-Z0-9]"){$i++}
+    if ($i -ge 3){
+        $s = [String] $s
+        ConvertTo-SecureString -AsPlainText $s
+    }
+    else{
+        Get-RandomPW $len
+    }
+}
 function end{
     echo "Press any key to exit"
     cmd /c pause > $null
@@ -49,9 +96,9 @@ function end{
 }
 
 #----------[ Declarations ]----------
-$cud = $Home + '\Desktop'
-$log = $cud + '\logs\main.log'
-$pwlog = $cud + '\logs\pwlog.log'
+$Desktop = $Home + '\Desktop'
+$log = $Desktop + '\logs\main.log'
+$pwlog = $Desktop + '\logs\pwlog.log'
 $readme = $env:systemdrive + '\CyberPatriot\Readme.url'
 $admin = $(get-account(500))
 $guest = $(get-account(501))
@@ -61,8 +108,8 @@ $dUser = $(get-account(503))
 # Arbitrary variables
 $UID = [Security.Principal.WindowsIdentity]::GetCurrent()
 $userObj = new-object Security.Principal.WindowsPrincipal($UID)
-$userSID = get-localuser $env:username | select -exp SID
-$adminSID = get-localuser $admin | select -exp SID
+$userSID = get-user $env:username | select -exp SID
+$adminSID = get-user $admin | select -exp SID
 $adminPos = [Security.Principal.WindowsBuiltinRole]::Administrator
 
 # Script is running with admin
@@ -78,8 +125,8 @@ if(($userSID -eq  $adminSID)){
 }
 
 # Logs folder/files exist
-if(-not (test-path $cud\logs)){
-    mkdir $cud\logs
+if(-not (test-path $Desktop\logs)){
+    mkdir $Desktop\logs
 }
 
 #----------[ alias.ps1 end ]-----------
