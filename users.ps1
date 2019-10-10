@@ -12,128 +12,33 @@
 [CmdletBinding()]
 param()
 
-#----------[ Declarations ]----------
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$readme = $env:systemdrive + '\CyberPatriot\Readme.url'
-
 #----------[ Functions ]----------
-function parse-link{
-    param(
-        [parameter(mandatory=$true)]
-        [string]$file
-    )
-    $target = (New-Object -ComObject WScript.Shell)
-    $target = $target.createshortcut($readme).targetpath
-    if($target.indexof('//') -gt -1){
-        $target = $target.substring(2+$target.indexof('//'))
-    }
-    $target
-}
-function parse-readme{
-    param(
-        [parameter(mandatory=$true)]
-        [string]$url
-    )
-    $file = wget $url
-    $file = ($file | select -exp content).tostring()
-    $start = $file.IndexOf('<pre>')+5
-    $end = $file.IndexOf('</pre>') - $start
-    $file.substring($start, $end)
-}
-function get-readme{
-    [switch] $admins
-    [switch] $users
-    [string] $section
-    if (-not (($admins) -or ($users))){
-        return
-    }
-    $return = @()
+function user-choice{
+	$choice = read-host "[R]eadme or [D]esktop"
+	if (-not ($choice -eq "R" -or $choice -eq "D")){
+		write-wf('Did not enter a valid choice')
+		$choice = user-choice
+	}
+	return $choice
 }
 
 #----------[ Main Execution ]----------
-$link = parse-link($readme)
-write-debug "Found README url at$link"
-$content = parse-readme($link)
-write-debug "Raw content for readme`n$content"
-$allowedAdmins = get-readme($content) -admins
-write-host "Admins $allowedAdmins"
-$allowedUsers = get-readme($content) -users
-write-host "Users $allowedUsers"
-
-
-<# old stuff
-function parse-readme{
-    param([string]$readme)
-    [switch] $administrators
-    [switch] $users
-    $target = (New-Object -ComObject WScript.Shell)
-    $target = $target.CreateShortcut($readme).TargetPath
-    if($target.indexOf('//') -gt -1){
-        $target = $target.substring(2+$target.indexOf('//'))
-    }
-    write-debug "Found README url at $target"
-    $file = wget $target -Method Get -UseBasicParsing 
-    $file = ($file | select -expand Content).toString()
-    $start = $file.IndexOf('<pre>')+5
-    $end = $file.IndexOf('</pre>') - $start
-    $section = $file.substring($start, $end)
-    $section = $section -split "`r`n" -split "<br>" -split "<b>"
-    $allowedUsers = @()
-    forEach($i in $section){
-        if (($i -notmatch ";") -and ($i -notmatch "`r`n")){
-            $index = $i
-            if ($i -match "(you)"){$index = $i.substring(0,$i.IndexOf("(you)"))}
-            else{$index = $i}
-            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){
-                $index=$index.substring(0,$index.length-1)
-            }
-            if($index -ne ""){
-                $allowedUsers+=$index
-            }
-        }
-    }
-    $end = $file.IndexOf('Authorized Users') - $start
-    $section = $file.substring($start, $end)
-    $section = $section -split "`r`n" -split "<br>" -split "<b>"
-    $allowedAdmins = @()
-    forEach ($i in $section){
-        if (($i -notmatch ";") -and ($i -notmatch "`r`n")){
-            $index = $i
-            if ($i -match "(you)"){
-                $index = $i.substring(0,$i.IndexOf("(you)"))
-            }
-            else{
-                $index = $i
-            }
-            if (($index.indexof(" ") -ne -1)-and($index.indexof(" ") -eq $index.length-1)){
-                $index=$index.substring(0,$index.length-1)
-            }
-            if($index -ne ""){
-                $allowedAdmins+=$index
-            }
-        }
-    }
-    return $allowedUsers,$allowedAdmins
+if(user-choice -eq "R")
+	{./parse.ps1}
+else{
+	if (-not(test-path $Desktop\Users.txt))
+		 {write-wf('Did not find Users.txt'); cmd /c pause; exit}
+	if (-not(test-path $Desktop\Admins.txt))
+		{write-wf('Did not find Admins.txt'); cmd /c pause; exit}
+	write-hf Found users.txt and admins.txt
+    $allowedUsers = cat $Desktop\Users.txt
+    $allowedAdmins = cat $Desktop\Admins.txt
 }
-
-#----------[ Main Execution ]-----------
-
 
 #----------[ users.ps1 end ]-----------
 write-debug 'Reached end of users'
 
-<# Old stuff
-
-else{
-    #Check user/admin files
-    if (-not(test-path $cud\Users.txt))
-        {write-wf('Did not find Users.txt'); cmd /c pause; exit}
-    if (-not(test-path $cud\Admins.txt))
-        {write-wf('Did not find Admins.txt'); cmd /c pause; exit}
-    write-hf Found users.txt and admins.txt
-    $allowedUsers = cat $cud\Users.txt
-    $allowedAdmins = cat $cud\Admins.txt
-}
+<# old stuff
 $allowedAdmins += $admin,$env:username
 $allowedUsers += $admin,$env:username,$guest
 if($dUser){$allowedUsers += $dUser}
