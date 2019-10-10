@@ -35,7 +35,7 @@ forEach($i in $html){
 		{$j = $j.substring(0,$j.indexOf(" "))}
 	if($j.contains("Administrators") -or $j.contains("Users"))
 		{$index++}
-	elseif (-not ($j -eq "" -or $j.contains("</") -or $j.contains("password"))){
+	elseif (-not ($j -eq "" -or $j.contains("<") -or $j.contains("password"))){
 		if($index -eq 1)
 			{$allowedAdmins+=$j}
 		$allowedUsers+=$j
