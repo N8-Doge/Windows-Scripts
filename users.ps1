@@ -26,14 +26,31 @@ function user-choice{
 if(user-choice -eq "R")
 	{./parse.ps1}
 else{
-	if (-not(test-path $Desktop\Users.txt))
-		 {write-wf('Did not find Users.txt'); cmd /c pause; exit}
-	if (-not(test-path $Desktop\Admins.txt))
-		{write-wf('Did not find Admins.txt'); cmd /c pause; exit}
-	write-hf Found users.txt and admins.txt
+    if (-not(test-path $Desktop\Users.txt))
+        {write-wf('Did not find Users.txt'); cmd /c pause; exit}
+    if (-not(test-path $Desktop\Admins.txt))
+        {write-wf('Did not find Admins.txt'); cmd /c pause; exit}
+    write-hf Found users.txt and admins.txt
     $allowedUsers = cat $Desktop\Users.txt
     $allowedAdmins = cat $Desktop\Admins.txt
 }
+
+forEach($u in $allowedUsers){
+    if(-not (get-user).name.contains($u))
+    	{add-user $u}
+}
+
+forEach($u in (get-user).name){
+    if(-not($allowedUsers.contains($u))
+        {remove-user $u}
+    if($allowedAdmins.contains($i)){
+        if((get-group "Administrators").contains($u))
+	    {add-groupmember $u}
+	else
+	    {remove-groupmember $u}
+    }
+}
+
 
 #----------[ users.ps1 end ]-----------
 write-debug 'Reached end of users'
