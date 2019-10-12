@@ -13,24 +13,58 @@
 param()
 
 #----------[ Checks ]----------
+# Check if user files exist
+$Desktop = "$home\Desktop"
 if(!(test-path $Desktop\Users.txt)){
 	if(!(test-path $Desktop\Admins.txt)){
 		./parse.ps1
 	}
 }
 
-#----------[ Main Execution ]----------
-$allowedUsers = cat $Desktop\Users.txt
-$allowedAdmins = cat $Desktop\Admins.txt
-
-forEach($u in $allowedUsers){
-    if(!(get-user).name.contains($u))
-    	{add-user $u}
+#----------[ Functions ]----------
+# Create a random password
+function get-randompw($len){
+    ForEach($i in 1..$len){
+        $s+=[char]((33..126) | get-random)
+    }
+    if($s -cmatch "[a-z]"){$i++}
+    if($s -cmatch "[A-Z]"){$i++}
+    if($s -cmatch "[0-9]"){$i++}
+    if($s -cmatch "[^a-zA-Z0-9]"){$i++}
+    if ($i -ge 3){
+        return $s
+    }
+    else{
+        get-randompw $len
+    }
 }
 
+#----------[ Main Execution ]----------
+# Store usernames into vars
+$allowedUsers = cat $Desktop\Users.txt
+$allowedAdmins = cat $Desktop\Admins.txt
+$allowedAdmins += $admin
+$allowedUsers += $admin,$guest
+if($dUser){$allowedUsers += $dUser}
+
+# Rename admin and guest accounts
+rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
+$admin = 'notAdmin'; $guest = 'notGuest'
+
+# Add missing users
+forEach($u in $allowedUsers){
+    if(!(get-user).name.contains($u)){
+        add-user $u
+        write-hf("Added user $u")
+    }
+}
+
+# Manage users
 forEach($u in (get-user).name){
-    if(!$allowedUsers.contains($u))
-        {remove-user $u}
+    if(!$allowedUsers.contains($u)){
+        remove-user $u
+        write-hf("Removed user $u")
+        }
     if($allowedAdmins.contains($u)){
         if(!(get-group "Administrators").contains($u)){
 			add-groupmember Administrators $u
@@ -41,9 +75,24 @@ forEach($u in (get-user).name){
 		remove-groupmember Administrators $u
 		write-hf("Removed $u from Administrators")
 	}
-	if($u -neq $env:username)
-		{set-user $u -password (get-randompw(15))}
-	enable-user $u
+	if($u -ne $env:username){
+        $plaintxt = get-randompw(15)
+        $encrypt = convert-tosecurestring -asplain $plaintxt
+        set-user $u -password $encrypt
+        write-hf("Set $u's password to: $plaintxt")
+    }
+	if($u -eq $admin -or $guest -or $dUser){
+        if($u.enabled){
+            disable-user $u
+            write-hf("Disabled $u")
+        }
+    }
+    else{
+        if(!$u.enabled){
+            enable-user $u
+            write-hf("Enabled $u")
+        }
+    }
 }
 
 
@@ -51,11 +100,7 @@ forEach($u in (get-user).name){
 write-debug 'Reached end of users'
 
 <# old stuff
-$allowedAdmins += $admin,$env:username
-$allowedUsers += $admin,$env:username,$guest
-if($dUser){$allowedUsers += $dUser}
-rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
-$admin = 'notAdmin'; $guest = 'notGuest'
+
 
 #Update Group Policy to allow user and password adding
 if (test-path $env:windir\System32\GroupPolicyUsers) 

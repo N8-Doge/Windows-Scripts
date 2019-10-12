@@ -9,11 +9,11 @@ param()
 #----------[ Preference Variables ]----------
 $defaultConsole = "Continue"
 $ConfirmPreference = "None"
-$DebugPreference = $DefaultConsole
-$ErrorActionPreference = $DefaultConsole
-$ProgressPreference = $DefaultConsole
-$VerbosePreference = $DefaultConsole
-$WarningPreference = $DefaultConsole
+$DebugPreference = $defaultConsole
+$ErrorActionPreference = $defaultConsole
+$ProgressPreference = $defaultConsole
+$VerbosePreference = $defaultConsole
+$WarningPreference = $defaultConsole
 
 #----------[ Aliases ]----------
 $winVer = $(gwmi win32_operatingsystem)
@@ -55,8 +55,8 @@ else{
 #----------[ Functions ]----------
 function get-account{
     param([int]$i)
-    $str = get-localuser * | select Name,SID
-    $str -match '-'+$i | select -exp Name
+    $lu = glu | where {([string]($_.sid)).split("-")[7] -eq $i}
+    $lu[0] | select name
 }
 function write-log{
     param([string]$s)
@@ -72,22 +72,6 @@ function write-wf{
     param([string]$s)
     $s = write-log($s)
     write-warning $s | tee -file $log -append
-}
-function get-randompw($len){
-    ForEach($i in 1..$len){
-        $s+=[char]((33..126) | get-random)
-    }
-    if($s -cmatch "[a-z]"){$i++}
-    if($s -cmatch "[A-Z]"){$i++}
-    if($s -cmatch "[0-9]"){$i++}
-    if($s -cmatch "[^a-zA-Z0-9]"){$i++}
-    if ($i -ge 3){
-        $s = [String] $s
-        ConvertTo-SecureString -AsPlainText $s
-    }
-    else{
-        Get-RandomPW $len
-    }
 }
 function end{
     echo "Press any key to exit"
