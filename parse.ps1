@@ -5,8 +5,8 @@
     Gets users from internet based readme
 
 .DESCRIPTION
-    Stores the users and admins in variables
-    titled $allowedUsers and $allowedAdmins
+    Stores the users and admins on Desktop
+	Files are named admins.txt and users.txt
 #>
 [CmdletBinding()]
 param()
@@ -18,7 +18,7 @@ $allowedAdmins = @()
 $allowedUsers = @()
 
 #----------[ Checks ]----------
-if(-not test-path $readme)
+if(-not (test-path $readme))
 	{write-wf('Did not find Readme.url'); cmd /c pause; exit}
 
 #----------[ Main Execution ]----------
@@ -42,6 +42,11 @@ forEach($i in $html){
 	}
 }
 
+#Send information to files
+$allowedAdmins >> $home/Desktop/admins.txt
+$allowedUsers >> $home/Desktop/users.txt
+
+#----------[ Print Verification ]-----------
 write-host -object "ADMINS" -b red
 write-host -object $allowedAdmins -b black
 write-host -object "USERS" -b red

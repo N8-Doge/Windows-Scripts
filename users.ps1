@@ -12,43 +12,38 @@
 [CmdletBinding()]
 param()
 
-#----------[ Functions ]----------
-function user-choice{
-	$choice = read-host "[R]eadme or [D]esktop"
-	if (-not ($choice -eq "R" -or $choice -eq "D")){
-		write-wf('Did not enter a valid choice')
-		$choice = user-choice
+#----------[ Checks ]----------
+if(!(test-path $Desktop\Users.txt)){
+	if(!(test-path $Desktop\Admins.txt)){
+		./parse.ps1
 	}
-	return $choice
 }
 
 #----------[ Main Execution ]----------
-if(user-choice -eq "R")
-	{./parse.ps1}
-else{
-    if (-not(test-path $Desktop\Users.txt))
-        {write-wf('Did not find Users.txt'); cmd /c pause; exit}
-    if (-not(test-path $Desktop\Admins.txt))
-        {write-wf('Did not find Admins.txt'); cmd /c pause; exit}
-    write-hf Found users.txt and admins.txt
-    $allowedUsers = cat $Desktop\Users.txt
-    $allowedAdmins = cat $Desktop\Admins.txt
-}
+$allowedUsers = cat $Desktop\Users.txt
+$allowedAdmins = cat $Desktop\Admins.txt
 
 forEach($u in $allowedUsers){
-    if(-not (get-user).name.contains($u))
+    if(!(get-user).name.contains($u))
     	{add-user $u}
 }
 
 forEach($u in (get-user).name){
-    if(-not($allowedUsers.contains($u))
+    if(!$allowedUsers.contains($u))
         {remove-user $u}
-    if($allowedAdmins.contains($i)){
-        if((get-group "Administrators").contains($u))
-	    {add-groupmember $u}
-	else
-	    {remove-groupmember $u}
-    }
+    if($allowedAdmins.contains($u)){
+        if(!(get-group "Administrators").contains($u)){
+			add-groupmember Administrators $u
+			write-hf("Added $u to Administrators")
+		}
+	}
+	else{
+		remove-groupmember Administrators $u
+		write-hf("Removed $u from Administrators")
+	}
+	if($u -neq $env:username)
+		{set-user $u -password (get-randompw(15))}
+	enable-user $u
 }
 
 
