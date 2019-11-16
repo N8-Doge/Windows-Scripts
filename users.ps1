@@ -22,21 +22,13 @@ if(!(test-path $Desktop\Users.txt)){
 }
 
 #----------[ Functions ]----------
-# Create a random password
-function get-randompw($len){
-    ForEach($i in 1..$len){
-        $s+=[char]((33..126) | get-random)
-    }
-    if($s -cmatch "[a-z]"){$i++}
-    if($s -cmatch "[A-Z]"){$i++}
-    if($s -cmatch "[0-9]"){$i++}
-    if($s -cmatch "[^a-zA-Z0-9]"){$i++}
-    if ($i -ge 3){
-        return $s
-    }
-    else{
-        get-randompw $len
-    }
+# Check password security
+function check-password($pw){
+    if($pw -cmatch "[a-z]"){$i++}
+    if($pw -cmatch "[A-Z]"){$i++}
+    if($pw -cmatch "[0-9]"){$i++}
+    if($pw -cmatch "[^a-zA-Z0-9]"){$i++}
+    return ($i -ge 3)
 }
 
 #----------[ Main Execution ]----------
@@ -60,6 +52,10 @@ forEach($u in $allowedUsers){
 }
 
 # Manage users
+$plaintxt = ""
+while(-not (check-password $plaintxt)){
+    $plaintxt = read-host "Please enter a secure password"
+}
 forEach($u in (get-user).name){
     if(!$allowedUsers.contains($u)){
         remove-user $u
@@ -76,10 +72,9 @@ forEach($u in (get-user).name){
 		write-hf("Removed $u from Administrators")
 	}
 	if($u -ne $env:username){
-        $plaintxt = get-randompw(15)
-        $encrypt = convert-tosecurestring -asplain $plaintxt
-        set-user $u -password $encrypt
-        write-hf("Set $u's password to: $plaintxt")
+        	$encrypt = convertto-securestring -asplain $plaintxt
+        	set-user $u -password $encrypt
+        	write-hf("Set $u's password to: $plaintxt")
     }
 	if($u -eq $admin -or $guest -or $dUser){
         if($u.enabled){
