@@ -16,8 +16,8 @@ $VerbosePreference = $defaultConsole
 $WarningPreference = $defaultConsole
 
 #----------[ Aliases ]----------
-$winVer = $(gwmi win32_operatingsystem)
-if($winVer.name.Contains("server")){
+gcm get-aduser 2>&1> $null
+if($?){
     set-alias Add-GroupMember Add-ADGroupMember
     set-alias Disable-User Disable-ADUser
     set-alias Enable-User Enable-ADUser

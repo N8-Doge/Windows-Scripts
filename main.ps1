@@ -8,6 +8,10 @@
     Please run using batch file
 #>
 
+#----------[ Directory ]-----------
+param($dir)
+set-location $dir
+
 #----------[ Main Execution ]-----------
 
 . .\alias.ps1

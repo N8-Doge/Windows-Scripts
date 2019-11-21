@@ -38,7 +38,7 @@ if (!(test-path HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP))
 else
     {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 > $null}
 write-hf('Disabled Universal Plug and Play')
-disable-psremoting -force > $null
+disable-psremoting -force -debug:$false > $null
 write-hf('Disabled remote Powershell')
 
 
