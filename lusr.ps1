@@ -11,25 +11,6 @@
 [CmdletBinding()]
 param()
 
-#----------[ Checks ]----------
-# Check if user files exist
-$Desktop = "$home\Desktop"
-if(!(test-path $Desktop\Users.txt)){
-	if(!(test-path $Desktop\Admins.txt)){
-		./parse.ps1
-	}
-}
-
-#----------[ Functions ]----------
-# Check password security
-function check-password($pw){
-    if($pw -cmatch "[a-z]"){$i++}
-    if($pw -cmatch "[A-Z]"){$i++}
-    if($pw -cmatch "[0-9]"){$i++}
-    if($pw -cmatch "[^a-zA-Z0-9]"){$i++}
-    return ($i -ge 3)
-}
-
 #----------[ Main Execution ]----------
 # Store usernames into vars
 $allowedUsers = cat $Desktop\Users.txt
@@ -46,10 +27,6 @@ forEach($u in $allowedUsers){
 }
 
 # Manage users
-$plaintxt = ""
-while(-not (check-password $plaintxt)){
-    $plaintxt = read-host "Please enter a secure password"
-}
 forEach($u in (get-localuser).name){
     if(!$allowedUsers.contains($u)){
         remove-localuser $u
