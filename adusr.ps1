@@ -1,4 +1,17 @@
-#Password policy
+<#
+.SYNOPSIS
+    Author: Nathan Chen
+    Created: 1-24-20
+    Configures adusers
+.DESCRIPTION
+    Configures adusers according to 
+    users.txt and admins.txt
+#>
+[CmdletBinding()]
+param()
+
+#----------[ Prelim ]----------
+# Password policy
 Get-ADDefaultDomainPasswordPolicy -Current LoggedOnUser | 
     Set-ADDefaultDomainPasswordPolicy `
     -AuthType Basic `
@@ -12,7 +25,8 @@ Get-ADDefaultDomainPasswordPolicy -Current LoggedOnUser |
     -PasswordHistoryCount 10 `
     -ReversibleEncryptionEnabled $False
 
-#variable stuff
+#----------[ Main execution ]----------
+# Store values into variables
 $allowedUsers = cat $home/Desktop/users.txt
 $allowedUsers += @("Guest","Administrator","DefaultAccount","krbtgt",$env:username)
 $allowedAdmins = cat $home/Desktop/admins.txt
@@ -23,12 +37,14 @@ $dadmins = get-adgroupmember "Domain Admins"
 $groups = get-adgroup -filter *
 $allowedGroups = @("Administrators","Domain Admins","Users")
 
-#loops
+# Add missing users
 foreach($u in $allowedUsers){
     if(!$users.contains($u.name)){
         new-aduser -name $u
     }
 }
+
+# Manage users
 foreach($u in $users){
     if(!$allowedUsers.contains($u.name)){
         remove-aduser $u -confirm:$false
@@ -43,6 +59,11 @@ foreach($u in $users){
         }
     }
     else{
+        if($u.name -ne $env:username){
+                $encrypt = convertto-securestring -asplain $plaintxt -force
+                set-aduserpassword $u -password $encrypt
+                write-hf("Set $u's password to: $plaintxt")
+        }
         if($u.name -eq "Administrator" -or $u.name -eq "Guest"){
             Set-ADUser $u `
                 -replace @{accountExpires=0} `
