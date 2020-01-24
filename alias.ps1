@@ -15,49 +15,7 @@ $ProgressPreference = $defaultConsole
 $VerbosePreference = $defaultConsole
 $WarningPreference = $defaultConsole
 
-#----------[ Aliases ]----------
-gcm get-aduser 2>&1> $null
-if($?){
-    set-alias Add-GroupMember Add-ADGroupMember
-    set-alias Disable-User Disable-ADUser
-    set-alias Enable-User Enable-ADUser
-    set-alias Get-Group Get-ADGroup
-    set-alias Get-GroupMember Get-ADGroupMember
-    set-alias Get-User Get-ADUser
-    set-alias New-Group New-ADGroup
-    set-alias New-User New-ADUser
-    set-alias Remove-Group Remove-ADGroup
-    set-alias Remove-GroupMember Remove-ADGroupMember
-    set-alias Remove-User Remove-ADUser
-    set-alias Rename-Group Rename-ADGroup
-    set-alias Rename-User Rename-ADUser
-    set-alias Set-Group Set-ADGroup
-    set-alias Set-User Set-ADUser
-}
-else{
-    set-alias Add-GroupMember Add-LocalGroupMember
-    set-alias Disable-User Disable-LocalUser
-    set-alias Enable-User Enable-LocalUser
-    set-alias Get-Group Get-LocalGroup
-    set-alias Get-GroupMember Get-LocalGroupMember
-    set-alias Get-User Get-LocalUser
-    set-alias New-Group New-LocalGroup
-    set-alias New-User New-LocalUser
-    set-alias Remove-Group Remove-LocalGroup
-    set-alias Remove-GroupMember Remove-LocalGroupMember
-    set-alias Remove-User Remove-LocalUser
-    set-alias Rename-Group Rename-LocalGroup
-    set-alias Rename-User Rename-LocalUser
-    set-alias Set-Group Set-LocalGroup
-    set-alias Set-User Set-LocalUser
-}
-
 #----------[ Functions ]----------
-function get-account{
-    param([int]$i)
-    $lu = glu | where {([string]($_.sid)).split("-")[7] -eq $i}
-    $lu[0] | select name
-}
 function write-log{
     param([string]$s)
     $d = $(get-date)
@@ -84,30 +42,8 @@ $Desktop = $Home + '\Desktop'
 $log = $Desktop + '\logs\main.log'
 $pwlog = $Desktop + '\logs\pwlog.log'
 $readme = $env:systemdrive + '\CyberPatriot\Readme.url'
-$admin = $(get-account(500))
-$guest = $(get-account(501))
-$dUser = $(get-account(503))
 
 #----------[ Prereq Checks ]----------
-# Arbitrary variables
-$UID = [Security.Principal.WindowsIdentity]::GetCurrent()
-$userObj = new-object Security.Principal.WindowsPrincipal($UID)
-$userSID = get-user $env:username | select -exp SID
-$adminSID = get-user $admin | select -exp SID
-$adminPos = [Security.Principal.WindowsBuiltinRole]::Administrator
-
-# Script is running with admin
-if(-not $userObj.isInRole($adminPos)){
-    write-wf('Admin check failed')
-    end
-}
-
-# User isn't logged into default Admin
-if(($userSID -eq  $adminSID)){
-    write-wf('Unique admin check failed')
-    end
-}
-
 # Logs folder/files exist
 if(-not (test-path $Desktop\logs)){
     mkdir $Desktop\logs
