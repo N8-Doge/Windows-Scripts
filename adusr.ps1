@@ -24,6 +24,16 @@ Get-ADDefaultDomainPasswordPolicy -Current LoggedOnUser |
     -MinPasswordLength 10 `
     -PasswordHistoryCount 10 `
     -ReversibleEncryptionEnabled $False
+    
+#----------[ Functions ]----------
+# Check password security
+function check-password($pw){
+    if($pw -cmatch "[a-z]"){$i++}
+    if($pw -cmatch "[A-Z]"){$i++}
+    if($pw -cmatch "[0-9]"){$i++}
+    if($pw -cmatch "[^a-zA-Z0-9]"){$i++}
+    return ($i -ge 3)
+}
 
 #----------[ Main execution ]----------
 # Store values into variables
@@ -45,6 +55,10 @@ foreach($u in $allowedUsers){
 }
 
 # Manage users
+$plaintxt = ""
+while(-not (check-password $plaintxt)){
+    $plaintxt = read-host "Please enter a secure password"
+}
 foreach($u in $users){
     if(!$allowedUsers.contains($u.name)){
         remove-aduser $u -confirm:$false
