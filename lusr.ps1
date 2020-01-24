@@ -1,13 +1,12 @@
 <#
 .SYNOPSIS
     Author: Nathan Chen
-    Created: 2-14-19
+    Created: 1-24-20
     Configures users accordingly
 
 .DESCRIPTION
-    If you choose not to parse the readme file,
-    make sure you have admins.txt and users.txt
-    on your desktop.
+    Configures local users according to
+    users.txt and admins.txt
 #>
 [CmdletBinding()]
 param()
@@ -35,18 +34,13 @@ function check-password($pw){
 # Store usernames into vars
 $allowedUsers = cat $Desktop\Users.txt
 $allowedAdmins = cat $Desktop\Admins.txt
-$allowedAdmins += $admin
-$allowedUsers += $admin,$guest
-if($dUser){$allowedUsers += $dUser}
-
-# Rename admin and guest accounts
-rnlu $admin 'notAdmin'; rnlu $guest 'notGuest'
-$admin = 'notAdmin'; $guest = 'notGuest'
+$allowedAdmins += @("Administrator")
+$allowedUsers += @("Administrator","Guest","DefaultAccount")
 
 # Add missing users
 forEach($u in $allowedUsers){
-    if(!(get-user).name.contains($u)){
-        add-user $u
+    if(!(get-localuser).name.contains($u)){
+        add-localuser $u
         write-hf("Added user $u")
     }
 }
@@ -56,35 +50,35 @@ $plaintxt = ""
 while(-not (check-password $plaintxt)){
     $plaintxt = read-host "Please enter a secure password"
 }
-forEach($u in (get-user).name){
+forEach($u in (get-localuser).name){
     if(!$allowedUsers.contains($u)){
-        remove-user $u
+        remove-localuser $u
         write-hf("Removed user $u")
         }
     if($allowedAdmins.contains($u)){
-        if(!(get-group "Administrators").contains($u)){
-			add-groupmember Administrators $u
+        if(!(get-localgroup "Administrators").contains($u)){
+			add-localgroupmember Administrators $u
 			write-hf("Added $u to Administrators")
 		}
 	}
 	else{
-		remove-groupmember Administrators $u
+		remove-localgroupmember Administrators $u
 		write-hf("Removed $u from Administrators")
 	}
 	if($u -ne $env:username){
         	$encrypt = convertto-securestring -asplain $plaintxt
-        	set-user $u -password $encrypt
+        	set-localuser $u -password $encrypt
         	write-hf("Set $u's password to: $plaintxt")
     }
 	if($u -eq $admin -or $guest -or $dUser){
         if($u.enabled){
-            disable-user $u
+            disable-localuser $u
             write-hf("Disabled $u")
         }
     }
     else{
         if(!$u.enabled){
-            enable-user $u
+            enable-localuser $u
             write-hf("Enabled $u")
         }
     }
