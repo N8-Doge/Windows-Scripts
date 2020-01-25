@@ -75,20 +75,22 @@ foreach($u in $allowedUsers){
 foreach($u in $users){
     if(!$allowedUsers.contains($u.name)){
         remove-aduser $u -confirm:$false
-        echo "Removed $u"
+        write-hf("Removed $u")
     }
     elseif(!$allowedAdmins.contains($u.name)){
         if($admins.name.contains($u.name)){
             remove-adgroupmember "Administrators" -mem $u -confirm:$false
+            write-hf("Removed $u from Admins")
         }
         if($dadmins.name.contains($u.name)){
             remove-adgroupmember "Domain Admins" -mem $u -confirm:$false
+            write-hf("Removed $u from Domain Admins")
         }
     }
     else{
         if($u.name -eq "Administrator" -or $u.name -eq "Guest"){
             Set-ADUser $u `
-                -replace @{accountExpires=0} `
+                -replace @{accountExpires=0;msTSRemoteControl=0} `
                 -allowReversiblePasswordEncryption $false `
                 -authType 1 `
                 -cannotChangePassword $true `
@@ -101,7 +103,7 @@ foreach($u in $users){
         }
         elseif($u.name -ne $env:username -and $u.name -ne "krbtgt"){
             Set-ADUser $u `
-                -replace @{accountExpires=0} `
+                -replace @{accountExpires=0;msTSRemoteControl=0} `
                 -allowReversiblePasswordEncryption $false `
                 -authType 1 `
                 -cannotChangePassword $false `
@@ -118,14 +120,18 @@ foreach($u in $users){
         }
     }
 }
+# Add admins to proper groups
 foreach($a in $allowedAdmins){
     if(!$admins.name.contains($a)){
         add-adgroupmember "Administrators" -members $a
+        write-hf("Added $u to Admins")
     }
     if(!$dadmins.name.contains($a)){
         add-adgroupmember "Domain Admins" -members $a
+        write-hf("Added $u to Domain Admins")
     }
 }
+# Remove all users in irrelevant groups
 foreach($g in $groups){
     if(!$allowedGroups.contains($g.name)){
         $members = get-adgroupmemberfix $g
@@ -133,4 +139,8 @@ foreach($g in $groups){
             remove-adgroupmember $g -members $members
         }
     }
+}
+# Kerberos delegation for computers
+foreach($c in (get-adcomputer -f *)){
+    set-adcomputer $c -trusted $false
 }
