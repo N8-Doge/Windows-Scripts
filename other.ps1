@@ -13,7 +13,7 @@ if (test-path $Desktop\shares.txt){
     $preserve = cat $Desktop\shares.txt
 }
 else{
-    $preserve = @()
+    $preserve = @("SYSVOL","NETLOGON")
     write-hf('Didn''t find shares.txt, deleting all shares')
 }
 $shares = gwmi -class win32_share | select -expand Name
