@@ -9,11 +9,11 @@ write-hf("Set audit policies, remember to import to file to update")
 <#
     Shares from shares.txt on desktop, case sensitive
 #>
+$preserve = @("SYSVOL","NETLOGON")
 if (test-path $Desktop\shares.txt){
-    $preserve = cat $Desktop\shares.txt
+    $preserve += cat $Desktop\shares.txt
 }
 else{
-    $preserve = @("SYSVOL","NETLOGON")
     write-hf('Didn''t find shares.txt, deleting all shares')
 }
 $shares = gwmi -class win32_share | select -expand Name
