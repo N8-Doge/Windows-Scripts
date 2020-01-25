@@ -42,6 +42,7 @@ $Desktop = $Home + '\Desktop'
 $log = $Desktop + '\logs\main.log'
 $pwlog = $Desktop + '\logs\pwlog.log'
 $readme = $env:systemdrive + '\CyberPatriot\Readme.url'
+set-itemproperty HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -name "DontUsePowershellOnWinX" -Value 0
 
 #----------[ Prereq Checks ]----------
 # Logs folder/files exist
