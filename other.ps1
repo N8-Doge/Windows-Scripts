@@ -2,22 +2,22 @@
     Set audit policy, exports into \logs
 #>
 auditpol /set /Category:* /success:enable /failure:enable > $null
-if (test-path $cud\logs\auditpolicy.txt){rm $cud\logs\auditpolicy.txt}
+if (test-path $Desktop\logs\auditpolicy.txt){rm $Desktop\logs\auditpolicy.txt}
 auditpol /backup /file:$cud\logs\auditpolicy.txt
 write-hf("Set audit policies, remember to import to file to update")
 
 <#
     Shares from shares.txt on desktop, case sensitive
 #>
-if (test-path $cud\shares.txt){
-    $preserve = cat $cud\shares.txt
+if (test-path $Desktop\shares.txt){
+    $preserve = cat $Desktop\shares.txt
 }
 else{
-    $preserve = ''
+    $preserve = @()
     write-hf('Didn''t find shares.txt, deleting all shares')
 }
 $shares = gwmi -class win32_share | select -expand Name
-Foreach($i in $shares){
+forEach($i in $shares){
     if(!$preserve.Contains($i)){
         (gwmi -class win32_share -Filter "Name='$i'").delete() > $null
         write-hf('Deleted share ' + $i)
@@ -38,7 +38,7 @@ if (!(test-path HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP))
 else
     {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 > $null}
 write-hf('Disabled Universal Plug and Play')
-disable-psremoting -force > $null
+disable-psremoting -force -debug:$false > $null
 write-hf('Disabled remote Powershell')
 
 

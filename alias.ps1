@@ -1,32 +1,21 @@
 ﻿<#
 .SYNOPSIS
-    Author: Nathan Chen
-    Created: 2-11-19
-    Initialize functions
 
-.DESCRIPTION
-    Sets up functions and variables for the master script
-    Also checks prerequisites for script to run
+,DESCRIPTION
 #>
 [CmdletBinding()]
 param()
 
 #----------[ Preference Variables ]----------
-# Debug: Inquire, Continue, SilentlyContinue
-$Console = "Continue"
+$defaultConsole = "Continue"
 $ConfirmPreference = "None"
-$DebugPreference = $Console
-$ErrorActionPreference = $Console
-$ProgressPreference = $Console
-$VerbosePreference = $Console
-$WarningPreference = $Console
+$DebugPreference = $defaultConsole
+$ErrorActionPreference = $defaultConsole
+$ProgressPreference = $defaultConsole
+$VerbosePreference = $defaultConsole
+$WarningPreference = $defaultConsole
 
 #----------[ Functions ]----------
-function get-account{
-    param([int]$i)
-    $str = glu * | select Name,SID
-    $str -match '-'+$i | select -exp Name
-}
 function write-log{
     param([string]$s)
     $d = $(get-date)
@@ -49,37 +38,15 @@ function end{
 }
 
 #----------[ Declarations ]----------
-$cud = $Home + '\Desktop'
-$log = $cud + '\logs\main.log'
-$pwlog = $cud + '\logs\pwlog.log'
+$Desktop = $Home + '\Desktop'
+$log = $Desktop + '\logs\main.log'
+$pwlog = $Desktop + '\logs\pwlog.log'
 $readme = $env:systemdrive + '\CyberPatriot\Readme.url'
-$admin = $(get-account(500))
-$guest = $(get-account(501))
-$dUser = $(get-account(503))
 
 #----------[ Prereq Checks ]----------
-# Arbitrary variables
-$UID = [Security.Principal.WindowsIdentity]::GetCurrent()
-$userObj = new-object Security.Principal.WindowsPrincipal($UID)
-$userSID = get-localuser $env:username | select -exp SID
-$adminSID = get-localuser $admin | select -exp SID
-$adminPos = [Security.Principal.WindowsBuiltinRole]::Administrator
-
-# Script is running with admin
-if(-not $userObj.isInRole($adminPos)){
-    write-wf('Admin check failed')
-    end
-}
-
-# User isn't logged into default Admin
-if(($userSID -eq  $adminSID)){
-    write-wf('Unique admin check failed')
-    end
-}
-
 # Logs folder/files exist
-if(-not (test-path $cud\logs)){
-    mkdir $cud\logs
+if(-not (test-path $Desktop\logs)){
+    mkdir $Desktop\logs
 }
 
 #----------[ alias.ps1 end ]-----------
