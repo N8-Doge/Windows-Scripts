@@ -5,4 +5,5 @@ if %errorlevel%==2 (
     exit
 )
 powershell set-executionpolicy remotesigned -scope CurrentUser -force
-start powershell -noexit %1\main.ps1 %1
+cd %1
+start powershell -noexit .\main.ps1 %1

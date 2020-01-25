@@ -10,6 +10,33 @@
 [CmdletBinding()]
 param()
 
+#----------[ Functions ]----------
+Function Get-ADGroupMemberFix {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true,
+            Position = 0
+        )]
+        [string[]]
+        $Identity
+    )
+    process {
+        foreach ($GroupIdentity in $Identity) {
+            $Group = $null
+            $Group = Get-ADGroup -Identity $GroupIdentity -Properties Member
+            if (-not $Group) {
+                continue
+            }
+            Foreach ($Member in $Group.Member) {
+                Get-ADObject $Member 
+            }
+        }
+    }
+}
+
 #----------[ Prelim ]----------
 # Password policy
 Get-ADDefaultDomainPasswordPolicy -Current LoggedOnUser | 
@@ -32,14 +59,14 @@ $allowedUsers += @("Guest","Administrator","DefaultAccount","krbtgt",$env:userna
 $allowedAdmins = cat $home/Desktop/admins.txt
 $allowedAdmins += @("Administrator")
 $users = get-aduser -filter *
-$admins = get-adgroupmember "Administrators"
-$dadmins = get-adgroupmember "Domain Admins"
+$admins = get-adgroupmemberfix "Administrators"
+$dadmins = get-adgroupmemberfix "Domain Admins"
 $groups = get-adgroup -filter *
 $allowedGroups = @("Administrators","Domain Admins","Users")
 
 # Add missing users
 foreach($u in $allowedUsers){
-    if(!$users.contains($u.name)){
+    if(!$users.name.contains($u)){
         new-aduser -name $u
     }
 }
@@ -50,7 +77,7 @@ foreach($u in $users){
         remove-aduser $u -confirm:$false
         echo "Removed $u"
     }
-    if(!$allowedAdmins.contains($u.name)){
+    elseif(!$allowedAdmins.contains($u.name)){
         if($admins.name.contains($u.name)){
             remove-adgroupmember "Administrators" -mem $u -confirm:$false
         }
@@ -59,10 +86,6 @@ foreach($u in $users){
         }
     }
     else{
-        if($u.name -ne $env:username){
-                set-aduserpassword $u -password $encrypt
-                write-hf("Set $u's password to: $plaintxt")
-        }
         if($u.name -eq "Administrator" -or $u.name -eq "Guest"){
             Set-ADUser $u `
                 -replace @{accountExpires=0} `
@@ -89,19 +112,25 @@ foreach($u in $users){
                 -passwordNotRequired $false `
                 -trustedForDelegation $false > $null
         }
-        
+        if($u.name -ne $env:username){
+                set-adaccountpassword $u -newpassword $encrypt
+                write-hf("Set $u's password to: $plaintxt")
+        }
     }
 }
 foreach($a in $allowedAdmins){
     if(!$admins.name.contains($a)){
-        add-adgroupmember "Administrators" -mem $a
+        add-adgroupmember "Administrators" -members $a
     }
     if(!$dadmins.name.contains($a)){
-        add-adgroupmember "Domain Admins" -mem $a
+        add-adgroupmember "Domain Admins" -members $a
     }
 }
 foreach($g in $groups){
     if(!$allowedGroups.contains($g.name)){
-        remove-adgroupmember $g -mem (get-adgroupmember $g)
+        $members = get-adgroupmemberfix $g
+        if($members){
+            remove-adgroupmember $g -members $members
+        }
     }
 }

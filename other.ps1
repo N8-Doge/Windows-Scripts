@@ -38,7 +38,10 @@ if (!(test-path HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP))
 else
     {Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\DirectPlayNATHelp\DPNHUPnP" -Name "UPnPMode" -Value 2 > $null}
 write-hf('Disabled Universal Plug and Play')
-disable-psremoting -force -debug:$false > $null
+$x = $VerbosePreference
+$VerbosePreference = "SilentlyContinue"
+disable-psremoting -force -debug:$false -verbose:$false > $null
+$VerbosePreference = $x
 write-hf('Disabled remote Powershell')
 
 
@@ -66,7 +69,13 @@ if ($confirmation -eq 'y') {
     write-host Show hidden folders -f yellow -b black
     cmd /c pause
     wget tinyurl.com/notpsiphon -outfile $home\psiphon3.exe
-    start psiphon3.exe
+}
+
+$confirmation = Read-Host "Do you want to export scheduled tasks? y/n"
+if ($confirmation -eq 'y'){
+    write-host Exporting... -f yellow -b black
+    ./task.ps1
+    write-host "Check your desktop for scheduled tasks"
 }
 
 #Fin
